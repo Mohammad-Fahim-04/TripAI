@@ -68,7 +68,7 @@ The main travel workflow in `backend.py` calls these helpers from the flight, ho
 ├── requirements.txt            # Python dependencies
 ├── static/                     # Static frontend assets
 ├── templates/                  # HTML templates
-└── tools/                      # Flight and web search integrations
+└── tools/                      # Legacy flight search helper
 ```
 
 ## Prerequisites
