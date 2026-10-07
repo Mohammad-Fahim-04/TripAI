@@ -11,11 +11,9 @@ from typing import TypedDict, Annotated
 import operator
 import uuid
 import asyncio
-import psycopg
-from psycopg.rows import dict_row
 
 from langgraph.graph import StateGraph, START, END
-from langgraph.checkpoint.postgres import PostgresSaver
+from langgraph.checkpoint.mongodb import MongoDBSaver
 from langchain_core.messages import (
     AnyMessage,
     HumanMessage,
@@ -26,21 +24,7 @@ from langchain_groq import ChatGroq
 # from tools.tavily_tool import tavily_search
 # from tools.flight_tool import search_flights
 from mcp_client import tavily_mcp_search, aviation_mcp_call, extract_destination, forecast_mcp_search, weather_mcp_search
-
-
-def get_database_url():
-    database_url = os.getenv("DATABASE_URL")
-
-    if not database_url:
-        raise ValueError(
-            "DATABASE_URL is missing. Please add your Render PostgreSQL External Database URL to .env"
-        )
-
-    if "sslmode=" not in database_url:
-        separator = "&" if "?" in database_url else "?"
-        database_url = f"{database_url}{separator}sslmode=require"
-
-    return database_url
+from mongodb import connect_mongodb
 
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -53,7 +37,7 @@ if not GROQ_API_KEY:
 # =========================
 
 llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
+    model="openai/gpt-oss-20b",
     api_key=GROQ_API_KEY
 )
 
@@ -340,18 +324,10 @@ graph.add_edge("final_agent", END)
 
 
 # =========================
-# PostgreSQL Checkpointer
+# MongoDB Checkpointer
 # =========================
-DATABASE_URL = get_database_url()
-
-_conn = psycopg.connect(
-    DATABASE_URL,
-    autocommit=True,
-    row_factory=dict_row
-)
-
-checkpointer = PostgresSaver(_conn)
-checkpointer.setup()
+mongo_client, mongo_database = connect_mongodb()
+checkpointer = MongoDBSaver(mongo_client, db_name=mongo_database.name)
 
 travel_graph = graph.compile(checkpointer=checkpointer)
 

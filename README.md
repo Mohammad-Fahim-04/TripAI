@@ -22,7 +22,7 @@ all coordinated through a LangGraph workflow with MCP-based tool integrations.
 - 🧠 Multi-agent orchestration with LangGraph and MCP
 - 📝 Structured travel itinerary generation
 - 🌐 FastAPI backend with a simple web interface
-- 💾 Conversation state persistence using PostgreSQL
+- 💾 Conversation state persistence using MongoDB Atlas
 - ⚡ LLM-powered responses with Groq
 
 ## Tech Stack
@@ -33,7 +33,7 @@ all coordinated through a LangGraph workflow with MCP-based tool integrations.
 - LangGraph
 - LangChain
 - Groq LLMs
-- PostgreSQL
+- MongoDB Atlas with PyMongo and the LangGraph MongoDB checkpointer
 - Tavily API
 - AviationStack API
 - MCP via `langchain-mcp-adapters` and `mcp`
@@ -62,6 +62,7 @@ The main travel workflow in `backend.py` calls these helpers from the flight, ho
 .
 ├── app.py                      # FastAPI app entry point
 ├── backend.py                  # LangGraph travel workflow
+├── mongodb.py                  # MongoDB connection helper
 ├── mcp_client.py               # MCP client and tool integration
 ├── custom_weather_mcp_server.py# Local weather MCP server
 ├── requirements.txt            # Python dependencies
@@ -75,7 +76,7 @@ The main travel workflow in `backend.py` calls these helpers from the flight, ho
 Before running the project locally, make sure you have:
 
 - Python 3.10 or newer installed
-- PostgreSQL running and accessible
+- A MongoDB Atlas cluster accessible from your network
 - API keys for:
   - Groq
   - Tavily
@@ -88,13 +89,16 @@ Before running the project locally, make sure you have:
 Create a `.env` file in the project root with the following variables:
 
 ```env
-DATABASE_URL=postgresql://user:password@localhost:5432/travel_db
+MONGODB_URI=your_mongodb_atlas_connection_string
+MONGODB_DATABASE=tripmate
 GROQ_API_KEY=your_groq_api_key
 AVIATIONSTACK_API_KEY=your_aviationstack_api_key
 TAVILY_API_KEY=your_tavily_api_key
 OPENWEATHER_API_KEY=your_openweather_api_key
 DEFAULT_ORIGIN_IATA=DAC
 ```
+
+LangGraph conversation state is persisted in the `checkpoints` and `checkpoint_writes` collections in the configured MongoDB database.
 
 ## Installation
 
