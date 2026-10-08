@@ -125,7 +125,7 @@ function copyResult() {
         });
 }
 
-function downloadPDF() {
+async function downloadPDF() {
     const pdfContent = document.getElementById("pdfContent");
 
     if (!latestAnswerMarkdown || !pdfContent) {
@@ -139,41 +139,57 @@ function downloadPDF() {
     downloadBtn.textContent = "Preparing PDF...";
     downloadBtn.disabled = true;
 
-    const options = {
-        margin: 0.5,
-        filename: "ai-travel-plan.pdf",
-        image: {
-            type: "jpeg",
-            quality: 0.98
-        },
-        html2canvas: {
+    try {
+        const canvas = await html2canvas(pdfContent, {
             scale: 2,
             useCORS: true,
-            backgroundColor: "#ffffff"
-        },
-        jsPDF: {
-            unit: "in",
-            format: "a4",
-            orientation: "portrait"
-        },
-        pagebreak: {
-            mode: ["avoid-all", "css", "legacy"]
-        }
-    };
+            backgroundColor: "#ffffff",
+            onclone: (clonedDocument) => {
+                const clonedSection = clonedDocument.getElementById("resultSection");
+                const clonedPdfContent = clonedDocument.getElementById("pdfContent");
 
-    html2pdf()
-        .set(options)
-        .from(pdfContent)
-        .save()
-        .then(() => {
-            downloadBtn.textContent = oldText;
-            downloadBtn.disabled = false;
-        })
-        .catch(() => {
-            downloadBtn.textContent = oldText;
-            downloadBtn.disabled = false;
-            showError("Could not download PDF.");
+                if (!clonedSection || !clonedPdfContent) {
+                    throw new Error("Could not prepare travel plan for PDF.");
+                }
+
+                [clonedSection, ...clonedSection.querySelectorAll("*")].forEach((element) => {
+                    element.style.setProperty("animation", "none", "important");
+                    element.style.setProperty("transition", "none", "important");
+                    element.style.setProperty("opacity", "1", "important");
+                    element.style.setProperty("visibility", "visible", "important");
+                });
+
+                const clonedTitle = clonedPdfContent.querySelector(".pdf-title");
+                if (!clonedTitle) {
+                    throw new Error("Could not prepare travel plan title for PDF.");
+                }
+                clonedTitle.style.display = "block";
+                clonedPdfContent.style.overflow = "visible";
+            }
         });
+
+        await html2pdf()
+            .set({
+                margin: 0.5,
+                filename: "ai-travel-plan.pdf",
+                image: {
+                    type: "jpeg",
+                    quality: 0.98
+                },
+                jsPDF: {
+                    unit: "in",
+                    format: "a4",
+                    orientation: "portrait"
+                }
+            })
+            .from(canvas, "canvas")
+            .save();
+    } catch {
+        showError("Could not download PDF.");
+    } finally {
+        downloadBtn.textContent = oldText;
+        downloadBtn.disabled = false;
+    }
 }
 
 document.addEventListener("keydown", function(event) {

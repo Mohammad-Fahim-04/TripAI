@@ -63,10 +63,7 @@ The MCP client initializes each service independently so a failure connecting to
 │   └── flight_tool.py           # Flight lookup utility
 ├── excalidraw_files/            # Architecture and MCP diagrams
 ├── .env.example                 # Environment variable template
-├── .gitignore
-├── .dockerignore
-├── Dockerfile
-└── LICENSE
+└── .gitignore
 ```
 
 ## How It Works
